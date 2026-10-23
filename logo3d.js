@@ -137,7 +137,7 @@ function initLogo3D(container) {
   scene.add(rimLight);
 
   if (hasShadow) {
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = false; /*PERF-LAYER*/ // syntes aldrig: inget mesh har receiveShadow
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   }
 
@@ -259,7 +259,7 @@ function initLogo3D(container) {
       for (const shape of SVGLoader.createShapes(path)) {
         const mesh = new THREE.Mesh(
           new THREE.ExtrudeGeometry(shape, {
-            depth, bevelEnabled:true, bevelThickness:3, bevelSize:1.8, bevelSegments:6
+            depth, bevelEnabled:true, bevelThickness:3, bevelSize:1.8, bevelSegments:3, curveSegments:8 /*PERF-LAYER*/
           }),
           [pathFront, pathBevel]
         );
@@ -348,8 +348,11 @@ function initLogo3D(container) {
 
   const clock = new THREE.Clock();
 
-  (function loop() {
+  let __perfVis = true; /*PERF-LAYER*/ // ritar bara när loggan syns
+  new IntersectionObserver(([e]) => { __perfVis = e.isIntersecting; }, { rootMargin: '120px' }).observe(container);
+(function loop() {
     requestAnimationFrame(loop);
+    if (!__perfVis || document.hidden) { clock.getDelta(); return; } /*PERF-LAYER*/
     const dt = Math.min(clock.getDelta(), 0.05);
     elapsed += dt;
 
